@@ -66,6 +66,35 @@ int _(fgetc)(int fd)
 	return (int) c;
 }
 
+char* _(fgets)(char* str, ulong len, int fd)
+{
+	if(!str || !len)
+		return NULL;
+
+	char* at = str;
+
+	while(--len)
+	{
+		int c = _(fgetc)(fd);
+
+		if(c == AS_EOF)
+		{
+			if(at == str)
+				return NULL;
+
+			break;
+		}
+
+		*at++ = (char) c;
+
+		if(c == '\n')
+			break;
+	}
+
+	*at = '\0';
+	return str;
+}
+
 int _(fopen)(const char* path, const char* mode)
 {
 	int flags = 0;
@@ -98,7 +127,7 @@ int _(fprintf)(int fd, const char* fmt, ...)
 ulong _(fread)(void* ptr, ulong len, ulong n, int fd)
 {
 	long got = _(do_read)(fd, (char*) ptr, len * n);
-	
+
 	if(got < 1)
 		return 0;
 

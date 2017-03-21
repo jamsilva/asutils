@@ -73,7 +73,7 @@ int _(modeflags)(char mode)
 	#ifndef O_CLOEXEC
 		#define O_CLOEXEC 0
 	#endif
-	
+
 	switch(mode)
 	{
 		#define mode_to_flags(m, f) case m: return f;

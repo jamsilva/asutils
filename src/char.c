@@ -6,13 +6,13 @@
 int _(ctoi)(int c)
 {
 	c = _(tolower)(c);
-	
+
 	if(_(islower)(c))
-		return c - 'a';
-	
+		return c - 'a' + 10;
+
 	if(_(isdigit)(c))
 		return c - '0';
-	
+
 	return -1;
 }
 
@@ -81,7 +81,7 @@ int _(tolower)(int c)
 {
 	if(_(isupper)(c))
 		return c - 'A' + 'a';
-	
+
 	return c;
 }
 
@@ -89,6 +89,6 @@ int _(toupper)(int c)
 {
 	if(_(islower)(c))
 		return c - 'a' + 'A';
-	
+
 	return c;
 }

@@ -39,7 +39,7 @@ static void handle_segv(assigctx* ctx)
 int main()
 {
 	pthread_t loop_th1, loop_th2;
-	
+
 	as_setsighandler(SIGSEGV, &handle_segv);
 
 	pthread_create(&loop_th1, NULL, &loop, NULL);

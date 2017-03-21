@@ -12,7 +12,7 @@ static assighandler installed_handlers[_NSIG];
 static void _(dispatcher)(int signum, siginfo_t* info, void* extra)
 {
 	assighandler handler = installed_handlers[signum];
-	
+
 	if(handler)
 	{
 		assigctx ctx;

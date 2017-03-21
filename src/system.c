@@ -4,11 +4,11 @@
 	#define _GNU_SOURCE 1
 	#include <unistd.h>
 	#include <sys/syscall.h>
-	
+
 	#include "system/linux/file.c"
 	#include "system/linux/thread.c"
 	#include "system/linux/trace.c"
-	
+
 	void _(cleanup_system)()
 	{
 		_(cleanup_task)();

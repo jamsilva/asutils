@@ -17,6 +17,7 @@ ASUTILS_BEGIN_CXXCOMPAT
 #include <stdarg.h>
 
 int       ASUTILS_FUNC(fgetc)   (int fd);
+char*     ASUTILS_FUNC(fgets)   (char* str, ulong len, int fd);
 int       ASUTILS_FUNC(fopen)   (const char* path, const char* mode);
 int       ASUTILS_FUNC(fputc)   (int c, int fd);
 int       ASUTILS_FUNC(fputs)   (const char* str, int fd);

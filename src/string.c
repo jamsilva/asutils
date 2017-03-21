@@ -155,6 +155,11 @@ const char* _(strchr)(const char* str, int c)
 	return str;
 }
 
+int _(strcmp)(const char* s1, const char* s2)
+{
+	return _(strncmp)(s1, s2, _UMAX(ulong));
+}
+
 char* _(strcpy)(char* dst, const char* src)
 {
 	return _(strncpy)(dst, src, _UMAX(ulong));
@@ -182,6 +187,21 @@ char* _(strncpy)(char* dst, const char* src, ulong n)
 	return dst;
 }
 
+int _(strncmp)(const char* s1, const char* s2, ulong n)
+{
+	while(n && (*s1 == *s2))
+	{
+		--n;
+		++s1;
+		++s2;
+	}
+
+	if(!n)
+		return 0;
+
+	return *s1 - *s2;
+}
+
 const char* _(strrchr)(const char* str, int c)
 {
 	const char* strp = str;
@@ -202,7 +222,7 @@ llong _(strtoll)(const char* str, llong radix)
 {
 	if(radix < 2 || radix > 36)
 		return NULL;
-	
+
 	llong l = 0;
 	llong multiplier = 1;
 
@@ -211,14 +231,14 @@ llong _(strtoll)(const char* str, llong radix)
 
 	if(*str == '-' || *str == '+')
 		++str;
-	
+
 	while(_(isalnum)(*str))
 	{
 		llong c = _(ctoi)(*str);
-		
+
 		if(c >= radix)
 			break;
-		
+
 		l = l * radix + c;
 		++str;
 	}
