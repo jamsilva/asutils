@@ -28,7 +28,7 @@ static long* _(gettids_thread_aware)(long pid)
 		return NULL;
 
 	// strlen("/proc/") + sizeof(long) * max_decimals_per_byte + strlen("/task") + '\0'.
-	char taskdir[6 + _SIZEOF(long) * 3 + 5 + 1];
+	char taskdir[6 + sizeof(long) * 3 + 5 + 1];
 	_(sprintf)(taskdir, "/proc/%ld/task", pid);
 	int tasks = _(opendir)(taskdir);
 
@@ -68,7 +68,7 @@ static long* _(gettids_fallback)(long pid)
 		return NULL;
 
 	// strlen("/proc/") + sizeof(long) * max_decimals_per_byte + strlen("/fd/") + sizeof(int) * max_decimals_per_byte + '\0'.
-	char path[6 + _SIZEOF(long) * 3 + 4 + _SIZEOF(int) * 3 + 1];
+	char path[6 + sizeof(long) * 3 + 4 + sizeof(int) * 3 + 1];
 	int procs = _(opendir)("/proc");
 
 	if(procs == -1)

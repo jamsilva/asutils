@@ -11,14 +11,9 @@
 void* loop(void* ignored)
 {
 	(void) ignored;
-	long i = 0;
 	as_settname("looper");
 
-	while(i++ < 1000)
-		as_printf("%ld\n", i);
-
-	char* unmapped = (char*) 0x42;
-	*unmapped = '\0';
+	while(1);
 
 	return NULL;
 }
@@ -28,12 +23,11 @@ static void handle_segv(assigctx* ctx)
 	astime time = as_totime(as_timesecs());
 	as_fputs("Crashed at ", AS_STDERR);
 	as_ptimeinfo(AS_STDERR, &time);
-	as_fputs(":\n", AS_STDERR);
+	as_fputs("...\n\n", AS_STDERR);
 	as_psiginfo(AS_STDERR, ctx);
-	as_fputs("Here, look at the stack trace:\n", AS_STDERR);
-	as_pstacktrace(AS_STDERR, ctx);
-	as_fputs("\n", AS_STDERR);
-	as_texit(1);
+	as_fputs("\nHere, look at the stack trace:\n\n", AS_STDERR);
+	as_pmtstacktrace(AS_STDERR, ctx);
+	as_pexit(42);
 }
 
 int main()
@@ -44,12 +38,13 @@ int main()
 
 	pthread_create(&loop_th1, NULL, &loop, NULL);
 	pthread_create(&loop_th2, NULL, &loop, NULL);
-	as_fputs("\n", AS_STDERR);
 
-	pthread_join(loop_th1, NULL);
-	pthread_join(loop_th2, NULL);
+	as_pmtstacktrace(AS_STDERR, NULL);
 
 	char* unmapped = (char*) NULL;
 	*unmapped = '\0';
+
+	pthread_join(loop_th1, NULL);
+	pthread_join(loop_th2, NULL);
 	return 0;
 }

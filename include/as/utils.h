@@ -26,7 +26,6 @@ typedef unsigned long long ullong;
 #define ASUTILS_ALIGN(v, align) ((ulong) (((v) + ((align) - 1)) & ~((align) - 1)))
 #define ASUTILS_CAT0(a, b)      a ## b
 #define ASUTILS_CAT(a, b)       ASUTILS_CAT0(a, b)
-#define ASUTILS_SIZEOF(a)       ((ulong) sizeof(a))
 #define ASUTILS_FUNC(fname)     ASUTILS_CAT(ASUTILS_PREFIX, fname)
 #define ASUTILS_SMAX(type)      (((type) 1) << (sizeof(type) * 8 - 1))
 #define ASUTILS_UMAX(type)      (~((type) 0))
@@ -39,7 +38,6 @@ typedef unsigned long long ullong;
 
 #ifdef ASUTILS_PRIVATE_DEF
 	#define _ALIGN   ASUTILS_ALIGN
-	#define _SIZEOF  ASUTILS_SIZEOF
 	#define _(fname) ASUTILS_FUNC(fname)
 	#define _SMAX    ASUTILS_SMAX
 	#define _UMAX    ASUTILS_UMAX

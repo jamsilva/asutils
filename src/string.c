@@ -76,7 +76,7 @@ char* _(lltostr)(char* dst, ullong value, ullong radix, int uppercase, int issig
 	char a_10 = (uppercase ? 'A' : 'a') - 10;
 	char* bufbegin;
 	char* bufend;
-	bufend = bufbegin = &dst[_SIZEOF(llong) * 8 - 1];
+	bufend = bufbegin = &dst[sizeof(llong) * 8 - 1];
 
 	do
 	{

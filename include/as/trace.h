@@ -5,7 +5,8 @@
 
 ASUTILS_BEGIN_CXXCOMPAT
 
-void ASUTILS_FUNC(pstacktrace)(int fd, assigctx* ctx);
+void ASUTILS_FUNC(pstacktrace)  (int fd, assigctx* ctx);
+void ASUTILS_FUNC(pmtstacktrace)(int fd, assigctx* ctx);
 
 ASUTILS_END_CXXCOMPAT
 

@@ -1,12 +1,12 @@
-#include <dlfcn.h>
-
+#define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
 #define ASUTILS_PRIVATE_DEF
 #include <as/trace.h>
 #include <as/fdio.h>
-#include <as/utils.h>
+#include <as/pinfo.h>
 #include <as/string.h>
+#include <as/utils.h>
 
 /* Private */
 
@@ -19,11 +19,25 @@ typedef struct
 	char   name[256];
 } aslibsyminfo;
 
+static int tracefd;
+static volatile long* tids;
+
 static aslibsyminfo* _(getsyminfo)(void* ptr, aslibsyminfo* syminfo)
 {
 	char localbuf[512];
 	syminfo->adjptr = ptr;
-	int fd = _(fopen)("/proc/self/maps", "r");
+
+	// strlen("/proc/") + sizeof(long) * max_decimals_per_byte + strlen("/task/") + sizeof(long) * max_decimals_per_byte + strlen("/maps") + '\0'.
+	char mapdir[6 + sizeof(long) * 3 + 6 + sizeof(long) * 3 + 5 + 1];
+	_(sprintf)(mapdir, "/proc/%ld/task/%ld/maps", _(getpid)(), _(gettid)());
+
+	int fd = _(fopen)(mapdir, "r");
+
+	if(fd == -1)
+	{
+		_(sprintf)(mapdir, "/proc/%ld/maps", _(gettid)());
+		fd = _(fopen)(mapdir, "r");
+	}
 
 	if(fd == -1)
 		return NULL;
@@ -128,6 +142,14 @@ static void _(pstacktrace_with_context)(int fd, unw_context_t* ctx)
 	} while(SAFE(LIBUNWIND_LOCAL) unw_step(&cursor) > 0);
 }
 
+static void _(pmtstacktrace_handler)(assigctx* ctx)
+{
+	_(pthreadinfo)(tracefd);
+	_(fputs)(":\n", tracefd);
+	_(pstacktrace)(tracefd, ctx);
+	++tids;
+}
+
 #ifdef __arm__
 	#define convert_context(extra) ((unw_context_t*) ((void*) (&((ucontext_t*) (extra))->arm_r0)))
 #else
@@ -146,4 +168,31 @@ void _(pstacktrace)(int fd, assigctx* ctx)
 	}
 	else
 		_(pstacktrace_with_context)(fd, convert_context(ctx->extra));
+}
+
+void _(pmtstacktrace)(int fd, assigctx* ctx)
+{
+	long tid = _(gettid)();
+	int signum = SIGSEGV;
+
+	if(ctx)
+		signum = ((siginfo_t*) ctx->info)->si_signo;
+
+	tracefd = fd;
+	tids = _(gettids)(_(getpid)());
+	assighandler curhandler = _(setsighandler)(signum, &_(pmtstacktrace_handler));
+
+	while(*tids != 0)
+	{
+		long current = *tids;
+
+		if(tid == current)
+			_(pmtstacktrace_handler)(ctx);
+		else if(_(tkill)(current, signum) == 0)
+			while(current == *tids);
+		else
+			++tids;
+	}
+
+	_(setsighandler)(signum, curhandler);
 }

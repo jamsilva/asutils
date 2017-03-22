@@ -8,7 +8,7 @@
 static __thread ulong iobuflen = 0;
 static __thread char* iobuf = NULL;
 
-static ulong maxdentlen = _SIZEOF(asdirent) + 256;
+static ulong maxdentlen = sizeof(asdirent) + 256;
 
 static int _(alloc_fdio)()
 {
@@ -203,7 +203,7 @@ asdirent* _(readdir)(int dir)
 	ulong i;
 	errno = EINVAL;
 
-	for(i = _SIZEOF(asdirent) ; res == -1 && errno == EINVAL && i <= maxdentlen ; i += _SIZEOF(asdirent))
+	for(i = sizeof(asdirent) ; res == -1 && errno == EINVAL && i <= maxdentlen ; i += sizeof(asdirent))
 		res = _(getdents)(dir, dent, i);
 
 	if(res == -1 && errno == EINVAL && i != maxdentlen)
