@@ -20,7 +20,7 @@ typedef struct
 } aslibsyminfo;
 
 static int tracefd;
-static volatile long* tids;
+static volatile long* volatile tids;
 
 static aslibsyminfo* _(getsyminfo)(void* ptr, aslibsyminfo* syminfo)
 {
@@ -104,10 +104,13 @@ static void _(pstacktrace_with_context)(int fd, unw_context_t* ctx)
 	unw_word_t previp = 0;
 	unw_cursor_t cursor;
 
-	if(SAFE(LIBUNWIND_LOCAL) unw_init_local(&cursor, ctx) == 0) do
+	if(SAFE(LIBUNWIND_LOCAL) unw_init_local(&cursor, ctx) != 0)
+		return;
+
+	do
 	{
 		unw_word_t offset;
-		unw_word_t ip = 0;
+		unw_word_t ip;
 		char pname[1024]; // C++ says compilers should support at least this identifier length. I say that any more is overkill.
 		SAFE(LIBUNWIND_LOCAL) unw_get_reg(&cursor, UNW_REG_IP, &ip);
 
@@ -116,20 +119,17 @@ static void _(pstacktrace_with_context)(int fd, unw_context_t* ctx)
 			++calls;
 			continue;
 		}
-		else
+
+		if(calls > 1)
 		{
-			if(calls > 1)
-			{
-				_(fprintf)(fd, " * %lld", calls); // For recursive functions print a single line with the number of consecutive calls.
-				calls = 1;
-			}
-
-			if(previp)
-				_(fprintf)(fd, "\n");
-
-			previp = ip;
+			_(fprintf)(fd, " * %lld", calls); // For recursive functions print a single line with the number of consecutive calls.
+			calls = 1;
 		}
 
+		if(previp)
+			_(fprintf)(fd, "\n");
+
+		previp = ip;
 		SAFE(LIBUNWIND_LOCAL) unw_get_proc_name(&cursor, pname, sizeof(pname), &offset);
 
 		if(ip == 0)
@@ -140,6 +140,12 @@ static void _(pstacktrace_with_context)(int fd, unw_context_t* ctx)
 		_(getsyminfo)((void*) ((uintptr_t) ip), &syminfo);
 		_(fprintf)(fd, "    %s+%P (%s+%P)", *pname ? pname : "?", offset, syminfo.name, syminfo.adjptr);
 	} while(SAFE(LIBUNWIND_LOCAL) unw_step(&cursor) > 0);
+
+	if(calls > 1)
+		_(fprintf)(fd, " * %lld", calls);
+
+	if(previp)
+		_(fprintf)(fd, "\n");
 }
 
 static void _(pmtstacktrace_handler)(assigctx* ctx)

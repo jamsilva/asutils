@@ -33,7 +33,7 @@ assighandler _(setsighandler)(int signum, assighandler handler)
 	if(handler != AS_SIG_DEFAULT)
 	{
 		new_sa.sa_sigaction = &_(dispatcher);
-		sigfillset(&new_sa.sa_mask);
+		SAFE(POSIX.1-2001) sigfillset(&new_sa.sa_mask);
 		new_sa.sa_flags = SA_ONSTACK | SA_RESTART | SA_SIGINFO;
 		SAFE(POSIX.1-2001) sigaction(signum, &new_sa, NULL);
 	}

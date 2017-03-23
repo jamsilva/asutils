@@ -147,7 +147,9 @@ long* _(gettids)(long pid)
 	if(list && list[0] && list[1]) // Found at least two threads.
 		return list;
 
-	return _(gettids_fallback)(pid);
+	list = _(gettids_fallback)(pid);
+	list[1] = list[0]; // The second task is the LinuxThreads manager; ignore it.
+	return &list[1];
 }
 
 char* _(gettname)()
