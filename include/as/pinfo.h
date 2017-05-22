@@ -1,8 +1,6 @@
 #ifndef AS_TASK_H_INCLUDED_
 #define AS_TASK_H_INCLUDED_
 #include <as/utils.h>
-#include <as/time.h>
-#include <as/signal.h>
 
 ASUTILS_BEGIN_CXXCOMPAT
 

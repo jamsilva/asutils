@@ -2,12 +2,6 @@
 #define AS_SIGNAL_H_INCLUDED_
 #include <as/utils.h>
 
-typedef struct
-{
-	void* info;
-	void* extra;
-} assigctx;
-
 typedef void (*assighandler)(assigctx* ctx);
 
 #define AS_SIG_DEFAULT ((assighandler)  0)

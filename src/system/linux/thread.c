@@ -1,10 +1,7 @@
 #include <sys/prctl.h>
 #include <sys/socket.h>
 
-#define ASUTILS_PRIVATE_DEF
-#include <as/fdio.h>
-#include <as/utils.h>
-#include <as/string.h>
+#include <as/private_.h>
 
 /* Private */
 

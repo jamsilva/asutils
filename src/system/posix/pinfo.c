@@ -1,11 +1,7 @@
 /* System */
 #include <signal.h>
 
-#define ASUTILS_PRIVATE_DEF
-#include <as/fdio.h>
-#include <as/pinfo.h>
-#include <as/signal.h>
-#include <as/utils.h>
+#include <as/private_.h>
 
 #ifndef _NSIG
 	#define _NSIG 65

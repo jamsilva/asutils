@@ -1,20 +1,10 @@
-#ifndef AS_SYSTEM_H_INCLUDED_
-#define AS_SYSTEM_H_INCLUDED_
+#ifndef AS_SYSTEM__H_INCLUDED_
+#define AS_SYSTEM__H_INCLUDED_
 
 #define AS_ATTACH 0
 #define AS_DETACH 1
 
-typedef struct
-{
-	ulong  inode;
-	ulong  offset;
-	ushort namelen;
-	char   name[1];
-} asdirent;
-
 ASUTILS_BEGIN_CXXCOMPAT
-
-#include <errno.h>
 
 void* ASUTILS_FUNC(anonmmap)      (ulong len);
 void  ASUTILS_FUNC(anonmunmap)    (void* addr, ulong len);

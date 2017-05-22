@@ -6,10 +6,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-#define ASUTILS_PRIVATE_DEF
-#include <as/fdio.h>
-#include <as/string.h>
-#include <as/utils.h>
+#include <as/private_.h>
 
 #ifndef MAP_ANONYMOUS
 	#define MAP_ANONYMOUS MAP_ANON

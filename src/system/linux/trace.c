@@ -1,12 +1,7 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
-#define ASUTILS_PRIVATE_DEF
-#include <as/trace.h>
-#include <as/fdio.h>
-#include <as/pinfo.h>
-#include <as/string.h>
-#include <as/utils.h>
+#include <as/private_.h>
 
 /* Private */
 

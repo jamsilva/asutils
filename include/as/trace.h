@@ -1,7 +1,6 @@
 #ifndef AS_TRACE_H_INCLUDED_
 #define AS_TRACE_H_INCLUDED_
 #include <as/utils.h>
-#include <as/signal.h>
 
 ASUTILS_BEGIN_CXXCOMPAT
 

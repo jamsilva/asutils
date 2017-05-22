@@ -1,6 +1,7 @@
-#define ASUTILS_PRIVATE_DEF
-#include <as/fdio.h>
-#include <as/string.h>
+/* System */
+#include <errno.h>
+
+#include <as/private_.h>
 
 /* Private */
 
@@ -15,7 +16,7 @@ static int _(alloc_fdio)()
 	if(iobuflen == 0)
 	{
 		ulong pagesize = _(getpagesize)();
-		iobuflen = _ALIGN(pagesize + maxdentlen, pagesize);
+		iobuflen = ALIGN(pagesize + maxdentlen, pagesize);
 		iobuf = (char*) _(anonmmap)(iobuflen);
 		iobuflen -= maxdentlen;
 
@@ -118,7 +119,7 @@ int _(fputs)(const char* str, int fd)
 
 int _(fprintf)(int fd, const char* fmt, ...)
 {
-	_TO_VA(ap, fmt,
+	TO_VA(ap, fmt,
 		int res = _(vfprintf)(fd, fmt, ap);
 	);
 	return res;
@@ -166,7 +167,7 @@ int _(getchar)()
 
 int _(printf)(const char* fmt, ...)
 {
-	_TO_VA(ap, fmt,
+	TO_VA(ap, fmt,
 		int res = _(vfprintf)(AS_STDOUT, fmt, ap);
 	);
 	return res;

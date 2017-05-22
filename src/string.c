@@ -1,8 +1,4 @@
-#define ASUTILS_PRIVATE_DEF
-#include <as/char.h>
-#include <as/math.h>
-#include <as/memory.h>
-#include <as/string.h>
+#include <as/private_.h>
 
 /* Public API */
 
@@ -117,7 +113,7 @@ char* _(lltostr)(char* dst, ullong value, ullong radix, int uppercase, int issig
 
 int _(snprintf)(char* str, ulong len, const char* fmt, ...)
 {
-	_TO_VA(ap, fmt,
+	TO_VA(ap, fmt,
 		int res = _(vsnprintf)(str, len, fmt, ap);
 	);
 	return res;
@@ -125,15 +121,15 @@ int _(snprintf)(char* str, ulong len, const char* fmt, ...)
 
 int _(sprintf)(char* str, const char* fmt, ...)
 {
-	_TO_VA(ap, fmt,
-		int res = _(vsnprintf)(str, _UMAX(ulong), fmt, ap);
+	TO_VA(ap, fmt,
+		int res = _(vsnprintf)(str, UMAX(ulong), fmt, ap);
 	);
 	return res;
 }
 
 char* _(stpcpy)(char* dst, const char* src)
 {
-	return _(stpncpy)(dst, src, _UMAX(ulong));
+	return _(stpncpy)(dst, src, UMAX(ulong));
 }
 
 char* _(stpncpy)(char* dst, const char* src, ulong n)
@@ -157,12 +153,12 @@ const char* _(strchr)(const char* str, int c)
 
 int _(strcmp)(const char* s1, const char* s2)
 {
-	return _(strncmp)(s1, s2, _UMAX(ulong));
+	return _(strncmp)(s1, s2, UMAX(ulong));
 }
 
 char* _(strcpy)(char* dst, const char* src)
 {
-	return _(strncpy)(dst, src, _UMAX(ulong));
+	return _(strncpy)(dst, src, UMAX(ulong));
 }
 
 char* _(strencpy)(char* dst, const char* src, ulong n)
@@ -417,5 +413,5 @@ int _(vsnprintf)(char* str, ulong len, const char* fmt, va_list ap)
 
 int _(vsprintf)(char* str, const char* fmt, va_list ap)
 {
-	return _(vsnprintf)(str, _UMAX(ulong), fmt, ap);
+	return _(vsnprintf)(str, UMAX(ulong), fmt, ap);
 }

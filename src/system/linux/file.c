@@ -1,5 +1,4 @@
-#define ASUTILS_PRIVATE_DEF
-#include <as/utils.h>
+#include <as/private_.h>
 
 /* Public API */
 

@@ -1,9 +1,7 @@
 /* System */
 #include <signal.h>
 
-#define ASUTILS_PRIVATE_DEF
-#include <as/signal.h>
-#include <as/utils.h>
+#include <as/private_.h>
 
 /* Private */
 
