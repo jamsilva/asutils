@@ -2,7 +2,7 @@
 
 /* Public API */
 
-llong _(ceil)(double d)
+llong as_ceil(double d)
 {
 	if(d >= 0.0)
 		return ((llong) d) + 1;
@@ -10,7 +10,7 @@ llong _(ceil)(double d)
 	return (llong) d;
 }
 
-llong _(floor)(double d)
+llong as_floor(double d)
 {
 	if(d >= 0.0)
 		return (llong) d;
@@ -18,23 +18,17 @@ llong _(floor)(double d)
 	return ((llong) d) - 1;
 }
 
-llong _(max)(llong l, llong r)
+llong as_max(llong l, llong r)
 {
-	if(l > r)
-		return l;
-
-	return r;
+	return (l > r ? l : r);
 }
 
-llong _(min)(llong l, llong r)
+llong as_min(llong l, llong r)
 {
-	if(l < r)
-		return l;
-
-	return r;
+	return (l < r ? l : r);
 }
 
-llong _(round)(double d)
+llong as_round(double d)
 {
 	if(d >= 0.0)
 		return (llong) (d + 0.5);

@@ -1,6 +1,3 @@
-/* System */
-#include <signal.h>
-
 #include <as/private_.h>
 
 #ifndef _NSIG
@@ -9,15 +6,15 @@
 
 /* Public API */
 
-void _(psiginfo)(int fd, assigctx* ctx)
+void as_psiginfo(int fd, as_sigctx_t* ctx)
 {
 	siginfo_t* info = (siginfo_t*) ctx->info;
-	_(pthreadinfo)(fd);
-	_(fputs)(" received ", fd);
+	as_pthreadinfo(fd);
+	as_fputs(" received ", fd);
 
 	#define PRINT_IF_SIG_EXTRA(begin, end, name, msg, ...) \
 		if(info->si_signo >= begin && info->si_signo <= end) \
-			_(fprintf)(fd, name " (%d) - " msg, __VA_ARGS__); \
+			as_fprintf(fd, name " (%d) - " msg, __VA_ARGS__); \
 		else
 
 	#define PRINT_IF_SIG(sig, msg) \
@@ -130,9 +127,9 @@ void _(psiginfo)(int fd, assigctx* ctx)
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
 	PRINT_IF_SIG_EXTRA(SIGRTMIN + 1, SIGRTMAX - 1, "SIGRTMIN + %d", "Real-time signal %d", info->si_signo - SIGRTMIN, info->si_signo, info->si_signo - SIGRTMIN + 1)
 #endif
-	ELSE _(fprintf)(fd,                                             "Unknown signal (%d)",                            info->si_signo);
+	ELSE as_fprintf(fd,                                             "Unknown signal (%d)",                            info->si_signo);
 
-	_(fputs)(":\n    ", fd);
+	as_fputs(":\n    ", fd);
 
 	const char* extra_message;
 	int print_address = 1;
@@ -141,7 +138,7 @@ void _(psiginfo)(int fd, assigctx* ctx)
 	#define PRINT_IF_CODE_EMSG(code, msg, msgm) \
 		if(info->si_code == code) \
 		{ \
-			_(fprintf)(fd, #code " (%d) - " msg, code); \
+			as_fprintf(fd, #code " (%d) - " msg, code); \
 			extra_message = msgm; \
 		} \
 		else
@@ -154,6 +151,7 @@ void _(psiginfo)(int fd, assigctx* ctx)
 
 	#define IF_NO_CODE reason_was_printed = 0;
 
+#ifdef SIGBUS
 	if(info->si_signo == SIGBUS)
 	{
 	#ifdef BUS_ADRALN
@@ -173,7 +171,10 @@ void _(psiginfo)(int fd, assigctx* ctx)
 	#endif
 		IF_NO_CODE
 	}
-	else if(info->si_signo == SIGCHLD)
+	else
+#endif
+#ifdef SIGCHLD
+	if(info->si_signo == SIGCHLD)
 	{
 		print_address = 0;
 
@@ -199,13 +200,18 @@ void _(psiginfo)(int fd, assigctx* ctx)
 
 		if(reason_was_printed)
 		{
-			_(fprintf)(fd, "hild with PID %d %s", info->si_pid, extra_message);
+			as_fprintf(fd, "hild with PID %d %s", info->si_pid, extra_message);
 
+		#ifdef CLD_EXITED
 			if(info->si_code == CLD_EXITED)
-				_(fprintf)(fd, " with status code %d", info->si_status);
+				as_fprintf(fd, " with status code %d", info->si_status);
+		#endif
 		}
 	}
-	else if(info->si_signo == SIGFPE)
+	else
+#endif
+#ifdef SIGFPE
+	if(info->si_signo == SIGFPE)
 	{
 	#ifdef FPE_FLTDIV
 		PRINT_IF_CODE_AT(FPE_FLTDIV, "Floating-point divide by zero")
@@ -233,7 +239,10 @@ void _(psiginfo)(int fd, assigctx* ctx)
 	#endif
 		IF_NO_CODE
 	}
-	else if(info->si_signo == SIGILL)
+	else
+#endif
+#ifdef SIGILL
+	if(info->si_signo == SIGILL)
 	{
 	#ifdef ILL_BADSTK
 		PRINT_IF_CODE_AT(ILL_BADSTK, "Internal stack error")
@@ -261,7 +270,10 @@ void _(psiginfo)(int fd, assigctx* ctx)
 	#endif
 		IF_NO_CODE
 	}
-	else if(info->si_signo == SIGIO)
+	else
+#endif
+#ifdef SIGIO
+	if(info->si_signo == SIGIO)
 	{
 		print_address = 0;
 
@@ -286,9 +298,12 @@ void _(psiginfo)(int fd, assigctx* ctx)
 		IF_NO_CODE
 
 		if(reason_was_printed)
-			_(fprintf)(fd, "at file descriptor %d", info->si_fd);
+			as_fprintf(fd, "at file descriptor %d", info->si_fd);
 	}
-	else if(info->si_signo == SIGSEGV)
+	else
+#endif
+#ifdef SIGSEGV
+	if(info->si_signo == SIGSEGV)
 	{
 	#ifdef SEGV_ACCERR
 		PRINT_IF_CODE_AT(SEGV_ACCERR, "Invalid permissions for mapped object")
@@ -304,7 +319,10 @@ void _(psiginfo)(int fd, assigctx* ctx)
 	#endif
 		IF_NO_CODE
 	}
-	else if(info->si_signo == SIGTRAP)
+	else
+#endif
+#ifdef SIGTRAP
+	if(info->si_signo == SIGTRAP)
 	{
 	#ifdef TRAP_BRKPT
 		PRINT_IF_CODE_AT(TRAP_BRKPT,  "Process breakpoint")
@@ -320,7 +338,10 @@ void _(psiginfo)(int fd, assigctx* ctx)
 	#endif
 		IF_NO_CODE
 	}
-	else if(info->si_signo == SIGSYS)
+	else
+#endif
+#ifdef SIGSYS
+	if(info->si_signo == SIGSYS)
 	{
 		print_address = 0;
 
@@ -330,6 +351,7 @@ void _(psiginfo)(int fd, assigctx* ctx)
 		IF_NO_CODE
 	}
 	else
+#endif
 		IF_NO_CODE
 
 	if(!reason_was_printed)
@@ -361,27 +383,28 @@ void _(psiginfo)(int fd, assigctx* ctx)
 	#ifdef SI_TKILL
 		PRINT_IF_CODE(SI_TKILL,   "Sent by tkill() or tgkill()")
 	#endif
-		ELSE _(fprintf)(fd,       "Unknown code %d", info->si_code);
+		ELSE as_fprintf(fd,       "Unknown code %d", info->si_code);
 	}
 	else if(print_address)
-		_(fprintf)(fd, "%s address %p", extra_message, info->si_addr);
+		as_fprintf(fd, "%s address %p", extra_message, info->si_addr);
 
-	_(fputs)(".\n", fd);
+	as_fputs(".\n", fd);
 }
 
-void _(pthreadinfo)(int fd)
+void as_pthreadinfo(int fd)
 {
-	char* tname = _(gettname)();
+	as_tname_t tname;
+	as_gettname(tname);
 
 	if(tname[0] != '\0')
-		_(fprintf)(fd, "Thread \"%s\"", tname);
+		as_fprintf(fd, "Thread \"%s\"", tname);
 	else
-		_(fputs)("Unnamed thread", fd);
+		as_fputs("Unnamed thread", fd);
 
-	_(fprintf)(fd, " (%d)", _(gettid)());
+	as_fprintf(fd, " (%d)", as_gettid());
 }
 
-void _(ptimeinfo)(int fd, astime* time)
+void as_ptimeinfo(int fd, as_time_t* time)
 {
-	_(fprintf)(fd, "%ld-%02d-%02d %02d:%02d:%02d", time->year, time->month, time->day, time->hour, time->minute, time->second);
+	as_fprintf(fd, "%ld-%02d-%02d %02d:%02d:%02d UTC", time->year, time->month, time->day, time->hour, time->minute, time->second);
 }

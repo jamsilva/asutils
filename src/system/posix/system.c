@@ -14,22 +14,22 @@
 
 /* Public API */
 
-void* _(anonmmap)(ulong len)
+void* as_anonmmap(ulong len)
 {
 	SAFE(SYSCALL) return mmap(NULL, (size_t) len, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, (off_t) 0);
 }
 
-void _(anonmunmap)(void* addr, ulong len)
+void as_anonmunmap(void* addr, ulong len)
 {
 	SAFE(SYSCALL) munmap(addr, (size_t) len);
 }
 
-int _(close)(int fd)
+int as_close(int fd)
 {
 	SAFE(POSIX.1-2001) return close(fd);
 }
 
-long _(getinode)(const char* path)
+long as_getinode(const char* path)
 {
 	struct stat sstat;
 	SAFE(POSIX.1-2001) int res = stat(path, &sstat);
@@ -40,7 +40,7 @@ long _(getinode)(const char* path)
 	return (long) sstat.st_ino;
 }
 
-ulong _(getpagesize)()
+ulong as_getpagesize()
 {
 	SAFE(POSIX.1-2001) long pagesize = sysconf(_SC_PAGESIZE);
 
@@ -50,22 +50,22 @@ ulong _(getpagesize)()
 	return (ulong) pagesize;
 }
 
-long _(getpid)()
+long as_getpid()
 {
 	SAFE(POSIX.1-2001) return (long) getpid();
 }
 
-int _(link)(const char* path1, const char* path2)
+int as_link(const char* path1, const char* path2)
 {
 	SAFE(POSIX.1-2001) return link(path1, path2);
 }
 
-long _(lseek)(int fd, long offset, int mode)
+long as_lseek(int fd, long offset, int mode)
 {
 	SAFE(POSIX.1-2001) return (long) lseek(fd, (off_t) offset, mode);
 }
 
-int _(modeflags)(char mode)
+int as_modeflags(char mode)
 {
 	#ifndef O_CLOEXEC
 		#define O_CLOEXEC 0
@@ -82,10 +82,10 @@ int _(modeflags)(char mode)
 		mode_to_flags('e', O_CLOEXEC);
 	}
 
-	return mode;
+	return 0;
 }
 
-int _(normalizeflags)(int flags)
+int as_normalizeflags(int flags)
 {
 	if(flags & O_RDWR)
 		return flags & ~(O_RDONLY | O_WRONLY);
@@ -93,54 +93,54 @@ int _(normalizeflags)(int flags)
 	return flags;
 }
 
-int _(open)(const char* path, int flags)
+int as_open(const char* path, int flags)
 {
 	SAFE(POSIX.1-2001) return open(path, flags);
 }
 
-int _(opendir)(const char* path)
+int as_opendir(const char* path)
 {
 	SAFE(POSIX.1-2001) return open(path, O_RDONLY | O_DIRECTORY);
 }
 
-void _(pexit)(int ret)
+void as_pexit(int ret)
 {
 	SAFE(POSIX.1-2001) _exit(ret);
 }
 
-long _(read)(int fd, void* buf, ulong len)
+long as_read(int fd, void* buf, ulong len)
 {
 	SAFE(POSIX.1-2001) return (long) read(fd, buf, (size_t) len);
 }
 
-long _(readlink)(const char* path, char* buf, ulong len)
+long as_readlink(const char* path, char* buf, ulong len)
 {
 	SAFE(POSIX.1-2001) return (long) readlink(path, buf, (size_t) len);
 }
 
-int _(rmdir)(const char* path)
+int as_rmdir(const char* path)
 {
 	SAFE(POSIX.1-2001) return rmdir(path);
 }
 
-ulong _(timesecs)()
+ulong as_timesecs()
 {
 	struct timespec ts;
 	SAFE(POSIX.1-2001) clock_gettime(CLOCK_REALTIME, &ts);
 	return (ulong) ts.tv_sec;
 }
 
-int _(unlink)(const char* path)
+int as_unlink(const char* path)
 {
 	SAFE(POSIX.1-2001) return unlink(path);
 }
 
-void _(waitexit)(long pid)
+void as_waitexit(long pid)
 {
 	SAFE(POSIX.1-2001) waitpid((pid_t) pid, NULL, WEXITED);
 }
 
-long _(write)(int fd, const void* buf, ulong len)
+long as_write(int fd, const void* buf, ulong len)
 {
 	SAFE(POSIX.1-2001) return (long) write(fd, buf, (size_t) len);
 }

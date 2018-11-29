@@ -8,8 +8,7 @@ STRIPFLAGS=--strip-debug --remove-section=.comment --remove-section=.gnu.version
 EXTRAIDIRS=
 EXTRALDIRS=
 UNWINDINFO=-funwind-tables -fno-ident -fomit-frame-pointer -fvisibility=protected -fvisibility-inlines-hidden
-FPREFIX=as_
-WARNS=-Weverything -Wno-cast-align -Wno-disabled-macro-expansion -Wno-missing-noreturn -Wno-missing-prototypes -Wno-padded -Wno-reserved-id-macro
+WARNS=-Weverything -Wno-disabled-macro-expansion -Wno-missing-noreturn -Wno-padded -Wno-reserved-id-macro
 O=z
 
 test-dynamic: dynamic test
@@ -28,14 +27,11 @@ dynamic: compile-dynamic
 static: compile-static
 	${AR} rcs libasutils.a *.o
 
-compile-dynamic: clean include/as/prefix_.h
+compile-dynamic: clean
 	${CC} -O${O} ${CFLAGS} ${UNWINDINFO} ${WARNS} -Iinclude ${EXTRAIDIRS} -c src/*.c -fPIC
 
-compile-static: clean include/as/prefix_.h
+compile-static: clean
 	${CC} -O${O} ${CFLAGS} ${UNWINDINFO} ${WARNS} -Iinclude ${EXTRAIDIRS} -c src/*.c
 
 clean:
-	rm *.o test libasutils.a libasutils.so include/as/prefix_.h 2> /dev/null || true
-
-include/as/prefix_.h:
-	echo "#define ASUTILS_PREFIX ${FPREFIX}" > $@
+	rm *.o test libasutils.a libasutils.so 2> /dev/null || true

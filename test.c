@@ -8,24 +8,16 @@
 #include <pthread.h>
 #include <signal.h>
 
-void* loop(void* ignored)
-{
-	(void) ignored;
-	as_settname("looper");
-
-	while(1);
-
-	return NULL;
-}
+volatile int threads = 0;
 
 static void put_separator(char c)
 {
 	as_fprintf(AS_STDERR, "%c---------------------------------------------------------------------%c\n", c, c);
 }
 
-static void handle_segv(assigctx* ctx)
+static void handle_segv(as_sigctx_t* ctx)
 {
-	astime time = as_totime(as_timesecs());
+	as_time_t time = as_totime(as_timesecs());
 	put_separator(',');
 	as_fputs("Crashed at ", AS_STDERR);
 	as_ptimeinfo(AS_STDERR, &time);
@@ -37,19 +29,40 @@ static void handle_segv(assigctx* ctx)
 	as_pexit(42);
 }
 
+void* loop(void* ignored)
+{
+	(void) ignored;
+	as_settname("looper");
+
+	put_separator(',');
+	as_pmtstacktrace(AS_STDERR, NULL);
+	put_separator('\'');
+	as_fputs("\n", AS_STDERR);
+	++threads;
+
+	while(1);
+
+	return NULL;
+}
+
 int main()
 {
 	pthread_t loop_th1, loop_th2;
 
 	as_setsighandler(SIGSEGV, &handle_segv);
 
-	pthread_create(&loop_th1, NULL, &loop, NULL);
-	pthread_create(&loop_th2, NULL, &loop, NULL);
-
 	put_separator(',');
 	as_pmtstacktrace(AS_STDERR, NULL);
 	put_separator('\'');
 	as_fputs("\n", AS_STDERR);
+
+	pthread_create(&loop_th1, NULL, &loop, NULL);
+
+	while(threads < 1);
+
+	pthread_create(&loop_th2, NULL, &loop, NULL);
+
+	while(threads < 2);
 
 	// Without both volatiles, compilers may produce unexpected results...
 	volatile char* volatile unmapped = NULL;

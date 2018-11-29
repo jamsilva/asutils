@@ -15,23 +15,23 @@ typedef struct
 } aslibsyminfo;
 
 static int tracefd;
-static volatile long* volatile tids;
+static volatile ulong index;
 
-static aslibsyminfo* _(getsyminfo)(void* ptr, aslibsyminfo* syminfo)
+static aslibsyminfo* as_getsyminfo(void* ptr, aslibsyminfo* syminfo)
 {
 	char localbuf[512];
 	syminfo->adjptr = ptr;
 
 	// strlen("/proc/") + sizeof(long) * max_decimals_per_byte + strlen("/task/") + sizeof(long) * max_decimals_per_byte + strlen("/maps") + '\0'.
 	char mapdir[6 + sizeof(long) * 3 + 6 + sizeof(long) * 3 + 5 + 1];
-	_(sprintf)(mapdir, "/proc/%ld/task/%ld/maps", _(getpid)(), _(gettid)());
+	as_sprintf(mapdir, "/proc/%ld/task/%ld/maps", as_getpid(), as_gettid());
 
-	int fd = _(fopen)(mapdir, "r");
+	int fd = as_fopen(mapdir, "r");
 
 	if(fd == -1)
 	{
-		_(sprintf)(mapdir, "/proc/%ld/maps", _(gettid)());
-		fd = _(fopen)(mapdir, "r");
+		as_sprintf(mapdir, "/proc/%ld/maps", as_gettid());
+		fd = as_fopen(mapdir, "r");
 	}
 
 	if(fd == -1)
@@ -39,25 +39,25 @@ static aslibsyminfo* _(getsyminfo)(void* ptr, aslibsyminfo* syminfo)
 
 	while(1)
 	{
-		char* line = _(fgets)(localbuf, sizeof(localbuf), fd);
+		char* line = as_fgets(localbuf, sizeof(localbuf), fd);
 
 		if(!line)
 		{
-			_(close)(fd);
+			as_close(fd);
 			return NULL;
 		}
 
-		syminfo->begin = (void*) ((ulong) _(strtoll)(line, 16));
+		syminfo->begin = (void*) ((ulong) as_strtoll(line, 16));
 
 		if(ptr < syminfo->begin)
 			continue;
 
-		const char* at = _(strchr)(line, '-');
+		const char* at = as_strchr(line, '-');
 
 		if(!at)
 			continue;
 
-		syminfo->end = (void*) ((ulong) _(strtoll)(++at, 16));
+		syminfo->end = (void*) ((ulong) as_strtoll(++at, 16));
 
 		if(ptr > syminfo->end)
 			continue;
@@ -78,22 +78,22 @@ static aslibsyminfo* _(getsyminfo)(void* ptr, aslibsyminfo* syminfo)
 
 		while(*++at == ' ');
 
-		syminfo->namelen = (ushort) (_(stpncpy)(syminfo->name, at, sizeof(syminfo->name)) - syminfo->name);
+		syminfo->namelen = (ushort) (as_stpncpy(syminfo->name, at, sizeof(syminfo->name)) - syminfo->name);
 
 		if(syminfo->name[syminfo->namelen - 1] == '\n')
 			syminfo->name[--syminfo->namelen] = '\0';
 
-		_(close)(fd);
-		long got = _(readlink)("/proc/self/exe", localbuf, sizeof(syminfo->name));
+		as_close(fd);
+		long got = as_readlink("/proc/self/exe", localbuf, sizeof(syminfo->name));
 
-		if(got > 0 && _(strncmp)(syminfo->name, localbuf, (ulong) got)) // Not the executable, therefore a dynamic library.
+		if(got > 0 && as_strncmp(syminfo->name, localbuf, (ulong) got)) // Not the executable, therefore a dynamic library.
 			syminfo->adjptr = ((char*) syminfo->adjptr) - ((ulong) syminfo->begin); // Remove the base loading address to obtain the relative address of the code.
 
 		return syminfo;
 	}
 }
 
-static void _(pstacktrace_with_context)(int fd, unw_context_t* ctx)
+static void as_pstacktrace_with_context(int fd, unw_context_t* ctx)
 {
 	long long calls = 1;
 	unw_word_t previp = 0;
@@ -117,12 +117,12 @@ static void _(pstacktrace_with_context)(int fd, unw_context_t* ctx)
 
 		if(calls > 1)
 		{
-			_(fprintf)(fd, " * %lld", calls); // For recursive functions print a single line with the number of consecutive calls.
+			as_fprintf(fd, " * %lld", calls); // For recursive functions print a single line with the number of consecutive calls.
 			calls = 1;
 		}
 
 		if(previp)
-			_(fprintf)(fd, "\n");
+			as_fprintf(fd, "\n");
 
 		previp = ip;
 		SAFE(LIBUNWIND_LOCAL) unw_get_proc_name(&cursor, pname, sizeof(pname), &offset);
@@ -131,24 +131,24 @@ static void _(pstacktrace_with_context)(int fd, unw_context_t* ctx)
 			break;
 
 		aslibsyminfo syminfo;
-		_(strcpy)(syminfo.name, "?");
-		_(getsyminfo)((void*) ((uintptr_t) ip), &syminfo);
-		_(fprintf)(fd, "    %s+%P (%s+%P)", *pname ? pname : "?", offset, syminfo.name, syminfo.adjptr);
+		as_strcpy(syminfo.name, "?");
+		as_getsyminfo((void*) ((uintptr_t) ip), &syminfo);
+		as_fprintf(fd, "    %s+%P (%s+%P)", *pname ? pname : "?", offset, syminfo.name, syminfo.adjptr);
 	} while(SAFE(LIBUNWIND_LOCAL) unw_step(&cursor) > 0);
 
 	if(calls > 1)
-		_(fprintf)(fd, " * %lld", calls);
+		as_fprintf(fd, " * %lld", calls);
 
 	if(previp)
-		_(fprintf)(fd, "\n");
+		as_fprintf(fd, "\n");
 }
 
-static void _(pmtstacktrace_handler)(assigctx* ctx)
+static void as_pmtstacktrace_handler(as_sigctx_t* ctx)
 {
-	_(pthreadinfo)(tracefd);
-	_(fputs)(":\n", tracefd);
-	_(pstacktrace)(tracefd, ctx);
-	++tids;
+	as_pthreadinfo(tracefd);
+	as_fputs(":\n", tracefd);
+	as_pstacktrace(tracefd, ctx);
+	++index;
 }
 
 #ifdef __arm__
@@ -159,41 +159,58 @@ static void _(pmtstacktrace_handler)(assigctx* ctx)
 
 /* Public API */
 
-void _(pstacktrace)(int fd, assigctx* ctx)
+void as_pstacktrace(int fd, as_sigctx_t* ctx)
 {
 	if(ctx == NULL)
 	{
 		unw_context_t context;
 		SAFE(LIBUNWIND_LOCAL) unw_getcontext(&context);
-		_(pstacktrace_with_context)(fd, &context);
+		as_pstacktrace_with_context(fd, &context);
 	}
 	else
-		_(pstacktrace_with_context)(fd, convert_context(ctx->extra));
+		as_pstacktrace_with_context(fd, convert_context(ctx->extra));
 }
 
-void _(pmtstacktrace)(int fd, assigctx* ctx)
+void as_pmtstacktrace(int fd, as_sigctx_t* ctx)
 {
-	long tid = _(gettid)();
+	long tid = as_gettid();
 	int signum = SIGSEGV;
 
 	if(ctx)
 		signum = ((siginfo_t*) ctx->info)->si_signo;
 
+	index = 0;
 	tracefd = fd;
-	tids = _(gettids)(_(getpid)());
-	assighandler curhandler = _(setsighandler)(signum, &_(pmtstacktrace_handler));
+	long fewtids[64];
+	long* tids = fewtids;
+	ulong count = as_gettids(tids, 64);
 
-	while(*tids != 0)
+	if(count > 64)
 	{
-		long current = *tids;
+		tids = (long*) as_malloc(sizeof(long) * count);
+		ulong newcount = as_gettids(tids, count);
 
-		if(tid == current)
-			_(pmtstacktrace_handler)(ctx);
-		else if(_(tkill)(current, signum) == 0)
-			while(current == *tids);
+		if(newcount < count)
+			count = newcount;
+	}
+
+	as_sighandler_t curhandler = as_setsighandler(signum, &as_pmtstacktrace_handler);
+
+	while(index < count)
+	{
+		ulong current = index;
+		long cur_tid = tids[index];
+
+		if(tid == cur_tid)
+			as_pmtstacktrace_handler(ctx);
+		else if(as_tkill(cur_tid, signum) == 0)
+			while(current == index);
 		else
 			++tids;
 	}
 
-	_(setsighandler)(signum, curhandler);
+	if(tids != fewtids)
+		as_free(tids);
+
+	as_setsighandler(signum, curhandler);
 }

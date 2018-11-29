@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <sys/prctl.h>
 #include <sys/socket.h>
 
@@ -5,167 +6,158 @@
 
 /* Private */
 
-// These variables are thread-local for MT-Safety.
-static __thread char  tnamebuf[16];
-static __thread long* tlist = NULL;
-
-static long* _(alloc_task)()
+static ulong as_gettids_modern(long pid, long* tids, ulong size)
 {
-	if(!tlist)
-		tlist = (long*) _(anonmmap)(_(getpagesize)());
-
-	return tlist;
-}
-
-static long* _(gettids_thread_aware)(long pid)
-{
-	long* tlistptr = _(alloc_task)();
-
-	if(!tlistptr)
-		return NULL;
-
 	// strlen("/proc/") + sizeof(long) * max_decimals_per_byte + strlen("/task") + '\0'.
 	char taskdir[6 + sizeof(long) * 3 + 5 + 1];
-	_(sprintf)(taskdir, "/proc/%ld/task", pid);
-	int tasks = _(opendir)(taskdir);
+	as_sprintf(taskdir, "/proc/%ld/task", pid);
+	int tasks = as_opendir(taskdir);
+	ulong count = 1;
 
 	if(tasks == -1)
-		return NULL;
+		return count;
+
+	as_dirent_t next_task;
 
 	while(1)
 	{
-		asdirent* next_task = _(readdir)(tasks);
-
-		// No more direntries.
-		if(!next_task)
+		if(as_readdir(tasks, &next_task) == -1) // No more direntries.
 			break;
 
-		const char* tidstr = _(strrchr)(next_task->name, '/');
+		const char* tidstr = as_strrchr(next_task.name, '/');
 
 		if(!tidstr)
-			tidstr = next_task->name;
+			tidstr = next_task.name;
 
-		long tid = (long) _(strtoll)(tidstr, 10);
+		long tid = (long) as_strtoll(tidstr, 10);
 
-		// Found a thread of pid.
-		if(tid > 0)
-			*tlistptr++ = tid;
+		if(tid == pid) // The pid is already there.
+			continue;
+
+		if(tid > 0) // Found a thread of pid.
+		{
+			if(count < size)
+				tids[count] = tid;
+
+			++count;
+		}
 	}
 
-	_(close)(tasks);
-	*tlistptr = (long) 0;
-	return tlist;
+	as_close(tasks);
+	return count;
 }
 
-static long* _(gettids_fallback)(long pid)
+static ulong as_gettids_linuxthreads(long pid, long* tids, ulong size)
 {
-	long* tlistptr = _(alloc_task)();
-
-	if(!tlistptr)
-		return NULL;
-
 	// strlen("/proc/") + sizeof(long) * max_decimals_per_byte + strlen("/fd/") + sizeof(int) * max_decimals_per_byte + '\0'.
 	char path[6 + sizeof(long) * 3 + 4 + sizeof(int) * 3 + 1];
-	int procs = _(opendir)("/proc");
+	int procs = as_opendir("/proc");
+	ulong count = 1;
+	utiny skipped_manager = 0;
 
 	if(procs == -1)
-		return NULL;
+		return count;
 
 	SAFE(POSIX.1-2001) int marker = socket(PF_UNIX, SOCK_RAW, 0);
 
 	if(marker == -1)
-		return NULL;
+		return count;
 
-	_(sprintf)(path, "/proc/%ld/fd/%d", pid, marker);
-	long inode = _(getinode)(path);
+	as_sprintf(path, "/proc/%ld/fd/%d", pid, marker);
+	long inode = as_getinode(path);
 
 	if(inode == -1)
 	{
-		_(close)(marker);
-		return NULL;
+		as_close(marker);
+		return count;
 	}
+
+	as_dirent_t next_proc;
 
 	while(1)
 	{
-		asdirent* next_proc = _(readdir)(procs);
-
-		// No more direntries.
-		if(!next_proc)
+		if(as_readdir(procs, &next_proc) == -1) // No more direntries.
 			break;
 
-		const char* tidstr = _(strrchr)(next_proc->name, '/');
+		const char* tidstr = as_strrchr(next_proc.name, '/');
 
 		if(!tidstr)
-			tidstr = next_proc->name;
+			tidstr = next_proc.name;
 
-		long tid = (long) _(strtoll)(tidstr, 10);
+		long tid = (long) as_strtoll(tidstr, 10);
 
-		// Not a tid.
-		if(tid < 1)
+		if(tid < 1) // Not a tid.
 			continue;
 
-		// Optimization - tid is a thread of itself.
-		if(tid == pid)
+		if(tid == pid) // The pid is already there.
+			continue;
+
+		as_sprintf(path, "/proc/%s/fd/%d", tidstr, marker);
+
+		if(inode == as_getinode(path)) // Same inode - this is a thread of pid.
 		{
-			*tlistptr++ = tid;
-			continue;
+			if(!skipped_manager)
+			{
+				skipped_manager = 1;
+				continue;
+			}
+
+			if(count < size)
+				tids[count] = tid;
+
+			++count;
 		}
-
-		_(sprintf)(path, "/proc/%s/fd/%d", tidstr, marker);
-
-		// Same inode - this is a thread of pid.
-		if(inode == _(getinode)(path))
-			*tlistptr++ = tid;
 	}
 
-	_(close)(marker);
-	_(close)(procs);
-	*tlistptr = (long) 0;
-	return tlist;
+	as_close(marker);
+	as_close(procs);
+	return count;
 }
 
 /* Public API */
 
-void _(cleanup_task)()
-{
-	if(tlist)
-		_(anonmunmap)(tlist, _(getpagesize)());
-}
-
-long _(gettid)()
+long as_gettid()
 {
 	SAFE(SYSCALL) return syscall(SYS_gettid);
 }
 
-long* _(gettids)(long pid)
+ulong as_gettids(long* tids, ulong size)
 {
-	long* list = _(gettids_thread_aware)(pid);
+	long pid = as_getpid();
 
-	if(list && list[0] && list[1]) // Found at least two threads.
-		return list;
+	if(!tids)
+		size = 0;
 
-	list = _(gettids_fallback)(pid);
-	list[1] = list[0]; // The second task is the LinuxThreads manager; ignore it.
-	return &list[1];
+	if(size > 0)
+		tids[0] = pid;
+
+	ulong count = as_gettids_modern(pid, tids, size);
+
+	if(count != 1)
+		return count;
+
+	return as_gettids_linuxthreads(pid, tids, size);
 }
 
-char* _(gettname)()
+void as_gettname(as_tname_t name)
 {
-	SAFE(SYSCALL) prctl(PR_GET_NAME, tnamebuf);
-	return tnamebuf;
+	if(!name)
+		errno = EINVAL;
+	else
+		SAFE(SYSCALL) prctl(PR_GET_NAME, name);
 }
 
-void _(settname)(const char* name)
+void as_settname(const as_tname_t name)
 {
 	SAFE(SYSCALL) prctl(PR_SET_NAME, name);
 }
 
-void _(texit)(int ret)
+void as_texit(int ret)
 {
 	SAFE(SYSCALL) syscall(SYS_exit, ret);
 }
 
-int _(tkill)(long tid, int signum)
+int as_tkill(long tid, int signum)
 {
 	SAFE(SYSCALL) return (int) syscall(SYS_tkill, (pid_t) tid, signum);
 }

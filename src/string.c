@@ -2,7 +2,7 @@
 
 /* Public API */
 
-char* _(dbltostr)(char* dst, double value, ulong padto, ulong decimals, char padchar)
+char* as_dbltostr(char* dst, double value, ulong padto, ulong decimals, char padchar)
 {
 	llong ival = (llong) value;
 	value = (value - ival) * 10;
@@ -15,7 +15,7 @@ char* _(dbltostr)(char* dst, double value, ulong padto, ulong decimals, char pad
 	else
 		padto = 0;
 
-	char* ptr = _(lltostr)(dst, (ullong) ival, 10, 0, 1, "", padto, padchar);
+	char* ptr = as_lltostr(dst, (ullong) ival, 10, 0, 1, "", padto, padchar);
 	*ptr++ = '.';
 
 	if(decimals != 0)
@@ -29,22 +29,22 @@ char* _(dbltostr)(char* dst, double value, ulong padto, ulong decimals, char pad
 			value = (value - uval) * 10;
 		}
 
-		*ptr++ = '0' + (char) _(ceil)(value);
+		*ptr++ = '0' + (char) as_ceil(value);
 	}
 
 	*ptr = '\0';
 	return ptr;
 }
 
-char* _(lltostr)(char* dst, ullong value, ullong radix, int uppercase, int issigned, const char* prefix, ulong padto, char padchar)
+char* as_lltostr(char* dst, ullong value, ullong radix, int uppercase, int issigned, const char* prefix, ulong padto, char padchar)
 {
 	if(radix < 2 || radix > 36)
 		return NULL;
 
 	int negative = 0;
-	ulong pfxlen = _(strlen)(prefix);
+	ulong pfxlen = as_strlen(prefix);
 
-	if (issigned && ((llong) value) < 0)
+	if(issigned && ((llong) value) < 0)
 	{
 		if(padchar != ' ')
 		{
@@ -61,7 +61,7 @@ char* _(lltostr)(char* dst, ullong value, ullong radix, int uppercase, int issig
 
 	if(padchar != ' ' && pfxlen != 0)
 	{
-		dst = _(strencpy)(dst, prefix, pfxlen + 1);
+		dst = as_strencpy(dst, prefix, pfxlen + 1);
 
 		if(padto > pfxlen)
 			padto -= pfxlen;
@@ -90,7 +90,7 @@ char* _(lltostr)(char* dst, ullong value, ullong radix, int uppercase, int issig
 	if(padchar == ' ' && pfxlen != 0)
 	{
 		bufbegin -= pfxlen;
-		_(memcpy)(bufbegin, prefix, pfxlen);
+		as_memcpy(bufbegin, prefix, pfxlen);
 	}
 
 	if(negative)
@@ -103,36 +103,36 @@ char* _(lltostr)(char* dst, ullong value, ullong radix, int uppercase, int issig
 		ulong padding = padto - len;
 		len = padto;
 		bufbegin -= padding;
-		_(memset)(bufbegin, padchar, padding);
+		as_memset(bufbegin, padchar, padding);
 	}
 
-	_(memcpy)(dst, bufbegin, len);
+	as_memcpy(dst, bufbegin, len);
 	dst[len] = '\0';
 	return &dst[len];
 }
 
-int _(snprintf)(char* str, ulong len, const char* fmt, ...)
+int as_snprintf(char* str, ulong len, const char* fmt, ...)
 {
 	TO_VA(ap, fmt,
-		int res = _(vsnprintf)(str, len, fmt, ap);
+		int res = as_vsnprintf(str, len, fmt, ap);
 	);
 	return res;
 }
 
-int _(sprintf)(char* str, const char* fmt, ...)
+int as_sprintf(char* str, const char* fmt, ...)
 {
 	TO_VA(ap, fmt,
-		int res = _(vsnprintf)(str, UMAX(ulong), fmt, ap);
+		int res = as_vsnprintf(str, UMAX(ulong), fmt, ap);
 	);
 	return res;
 }
 
-char* _(stpcpy)(char* dst, const char* src)
+char* as_stpcpy(char* dst, const char* src)
 {
-	return _(stpncpy)(dst, src, UMAX(ulong));
+	return as_stpncpy(dst, src, UMAX(ulong));
 }
 
-char* _(stpncpy)(char* dst, const char* src, ulong n)
+char* as_stpncpy(char* dst, const char* src, ulong n)
 {
 	while(n-- && (*dst = *src++))
 		++dst;
@@ -140,7 +140,7 @@ char* _(stpncpy)(char* dst, const char* src, ulong n)
 	return dst;
 }
 
-const char* _(strchr)(const char* str, int c)
+const char* as_strchr(const char* str, int c)
 {
 	while(*str && *str != c)
 		++str;
@@ -151,24 +151,24 @@ const char* _(strchr)(const char* str, int c)
 	return str;
 }
 
-int _(strcmp)(const char* s1, const char* s2)
+int as_strcmp(const char* s1, const char* s2)
 {
-	return _(strncmp)(s1, s2, UMAX(ulong));
+	return as_strncmp(s1, s2, UMAX(ulong));
 }
 
-char* _(strcpy)(char* dst, const char* src)
+char* as_strcpy(char* dst, const char* src)
 {
-	return _(strncpy)(dst, src, UMAX(ulong));
+	return as_strncpy(dst, src, UMAX(ulong));
 }
 
-char* _(strencpy)(char* dst, const char* src, ulong n)
+char* as_strencpy(char* dst, const char* src, ulong n)
 {
-	dst = _(stpncpy)(dst, src, n);
+	dst = as_stpncpy(dst, src, n);
 	*dst = '\0';
 	return dst;
 }
 
-ulong _(strlen)(const char* s)
+ulong as_strlen(const char* s)
 {
 	const char* p = s;
 
@@ -177,13 +177,13 @@ ulong _(strlen)(const char* s)
 	return (ulong) (p - s - 1);
 }
 
-char* _(strncpy)(char* dst, const char* src, ulong n)
+char* as_strncpy(char* dst, const char* src, ulong n)
 {
-	_(stpncpy)(dst, src, n);
+	as_stpncpy(dst, src, n);
 	return dst;
 }
 
-int _(strncmp)(const char* s1, const char* s2, ulong n)
+int as_strncmp(const char* s1, const char* s2, ulong n)
 {
 	while(n && (*s1 == *s2))
 	{
@@ -198,7 +198,7 @@ int _(strncmp)(const char* s1, const char* s2, ulong n)
 	return *s1 - *s2;
 }
 
-const char* _(strrchr)(const char* str, int c)
+const char* as_strrchr(const char* str, int c)
 {
 	const char* strp = str;
 
@@ -214,10 +214,10 @@ const char* _(strrchr)(const char* str, int c)
 	return strp;
 }
 
-llong _(strtoll)(const char* str, llong radix)
+llong as_strtoll(const char* str, llong radix)
 {
 	if(radix < 2 || radix > 36)
-		return NULL;
+		return 0;
 
 	llong l = 0;
 	llong multiplier = 1;
@@ -228,9 +228,9 @@ llong _(strtoll)(const char* str, llong radix)
 	if(*str == '-' || *str == '+')
 		++str;
 
-	while(_(isalnum)(*str))
+	while(as_isalnum(*str))
 	{
-		llong c = _(ctoi)(*str);
+		llong c = as_ctoi(*str);
 
 		if(c >= radix)
 			break;
@@ -242,7 +242,7 @@ llong _(strtoll)(const char* str, llong radix)
 	return l * multiplier;
 }
 
-int _(vsnprintf)(char* str, ulong len, const char* fmt, va_list ap)
+int as_vsnprintf(char* str, ulong len, const char* fmt, va_list ap)
 {
 	char buf[200];
 	char* at = str;
@@ -275,10 +275,10 @@ int _(vsnprintf)(char* str, ulong len, const char* fmt, va_list ap)
 			next = *fmt++;
 		}
 
-		while(_(isdigit)(next))
+		while(as_isdigit(next))
 		{
 			padto *= 10;
-			padto += (ulong) _(ctoi)(next);
+			padto += (ulong) as_ctoi(next);
 			next = *fmt++;
 		}
 
@@ -289,16 +289,16 @@ int _(vsnprintf)(char* str, ulong len, const char* fmt, va_list ap)
 		{
 			next = *fmt++;
 
-			if(_(isdigit)(next))
+			if(as_isdigit(next))
 			{
 				decimals = 0;
 
 				do
 				{
 					decimals *= 10;
-					decimals += (ulong) _(ctoi)(next);
+					decimals += (ulong) as_ctoi(next);
 					next = *fmt++;
-				} while(_(isdigit)(next));
+				} while(as_isdigit(next));
 			}
 		}
 
@@ -363,7 +363,7 @@ int _(vsnprintf)(char* str, ulong len, const char* fmt, va_list ap)
 			next = 's';
 		}
 
-		switch (next)
+		switch(next)
 		{
 			case 'b':
 			case 'o':
@@ -375,18 +375,18 @@ int _(vsnprintf)(char* str, ulong len, const char* fmt, va_list ap)
 			case 'x':
 			case 'X':
 				copyfrom = buf;
-				_(lltostr)(buf, u, radix, (next == 'P' || next == 'X'), (next == 'd' || next == 'i'), prefix, padto, padchar);
+				as_lltostr(buf, u, radix, (next == 'P' || next == 'X'), (next == 'd' || next == 'i'), prefix, padto, padchar);
 				break;
 
 			case 'f':
 			case 'g':
 				copyfrom = buf;
-				_(dbltostr)(buf, va_arg(ap, double), padto, decimals, padchar);
+				as_dbltostr(buf, va_arg(ap, double), padto, decimals, padchar);
 				break;
 
 			case 's':
 			case 'c' :
-				slen = _(strlen)(copyfrom);
+				slen = as_strlen(copyfrom);
 
 				if(padto > slen)
 				{
@@ -396,22 +396,22 @@ int _(vsnprintf)(char* str, ulong len, const char* fmt, va_list ap)
 						padding = remaining;
 
 					remaining -= padding;
-					at = _(lltostr)(at, 0, 10, 0, 0, "", padding + 1, ' ') - 1;
+					at = as_lltostr(at, 0, 10, 0, 0, "", padding + 1, ' ') - 1;
 
 					if(remaining == 0)
 						continue;
 				}
 		}
 
-		char* newat = _(strencpy)(at, copyfrom, remaining);
-		at = newat + (newat != at + _(strlen)(copyfrom));
+		char* newat = as_strencpy(at, copyfrom, remaining);
+		at = newat + (newat != at + as_strlen(copyfrom));
 	}
 
 	*at = '\0';
 	return (int) (at - str);
 }
 
-int _(vsprintf)(char* str, const char* fmt, va_list ap)
+int as_vsprintf(char* str, const char* fmt, va_list ap)
 {
-	return _(vsnprintf)(str, UMAX(ulong), fmt, ap);
+	return as_vsnprintf(str, UMAX(ulong), fmt, ap);
 }

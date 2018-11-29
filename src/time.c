@@ -2,9 +2,9 @@
 
 /* Public API */
 
-astime _(totime)(ulong secs)
+as_time_t as_totime(ulong secs)
 {
-	astime time;
+	as_time_t time;
 	ulong days_in_year;
 	time.second = secs  % 60;
 	ulong mins  = secs  / 60;
@@ -17,14 +17,11 @@ astime _(totime)(ulong secs)
 	while(1)
 	{
 		days_in_year = 365 + (!(time.year % 400) - !(time.year % 100) + !(time.year % 4));
-		++time.year;
 
 		if(days < days_in_year)
-		{
-			--time.year;
 			break;
-		}
 
+		++time.year;
 		days -= days_in_year;
 	}
 
@@ -32,8 +29,8 @@ astime _(totime)(ulong secs)
 	{
 		if(days <= 31 + 28)
 		{
-			time.month = 1 + (days >= 31);
-			time.day = 1 + days % 31;
+			time.month = (utiny) (1 + (days >= 31));
+			time.day = (utiny) (1 + days % 31);
 			return time;
 		}
 

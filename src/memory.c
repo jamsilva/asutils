@@ -2,7 +2,27 @@
 
 /* Public API */
 
-void* _(memcpy)(void* dst, const void* src, ulong len)
+void as_free(void* ptr)
+{
+	if(!ptr)
+		return;
+
+	ulong* mem = &((ulong*) ptr)[-1];
+	as_anonmunmap(mem, *mem);
+}
+
+void* as_malloc(ulong size)
+{
+	if(size == 0)
+		return NULL;
+
+	size = ALIGN(size + sizeof(ulong), as_getpagesize());
+	ulong* mem = (ulong*) as_anonmmap(size);
+	*mem = size;
+	return (void*) &mem[1];
+}
+
+void* as_memcpy(void* dst, const void* src, ulong len)
 {
 	if(dst == src)
 		return dst;
@@ -15,7 +35,7 @@ void* _(memcpy)(void* dst, const void* src, ulong len)
 	return dst;
 }
 
-void* _(memset)(void* s, int c, ulong len)
+void* as_memset(void* s, int c, ulong len)
 {
 	char* cs = (char*) s;
 
@@ -24,10 +44,10 @@ void* _(memset)(void* s, int c, ulong len)
 	return s;
 }
 
-void* _(memmove)(void* dst, const void* src, ulong len)
+void* as_memmove(void* dst, const void* src, ulong len)
 {
 	if(dst <= src)
-		return _(memcpy)(dst, src, len);
+		return as_memcpy(dst, src, len);
 
 	char* cdst = (char*) dst + len;
 	const char* csrc = (const char*) src + len;

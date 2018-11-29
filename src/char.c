@@ -2,91 +2,91 @@
 
 /* Public API */
 
-int _(ctoi)(int c)
+int as_ctoi(int c)
 {
-	c = _(tolower)(c);
+	c = as_tolower(c);
 
-	if(_(islower)(c))
+	if(as_islower(c))
 		return c - 'a' + 10;
 
-	if(_(isdigit)(c))
+	if(as_isdigit(c))
 		return c - '0';
 
 	return -1;
 }
 
-int _(isalnum)(int c)
+int as_isalnum(int c)
 {
-	return _(isalpha)(c) || _(isdigit)(c);
+	return as_isalpha(c) || as_isdigit(c);
 }
 
-int _(isalpha)(int c)
+int as_isalpha(int c)
 {
-	return _(isupper)(c) || _(islower)(c);
+	return as_isupper(c) || as_islower(c);
 }
 
-int _(iscntrl)(int c)
+int as_iscntrl(int c)
 {
 	return c == 0x7F || (c >= '\0' && c <= 0x1F);
 }
 
-int _(isdigit)(int c)
+int as_isdigit(int c)
 {
 	return c >= '0' && c <= '9';
 }
 
-int _(isgraph)(int c)
+int as_isgraph(int c)
 {
-	return c != ' ' && _(isprint)(c);
+	return c != ' ' && as_isprint(c);
 }
 
-int _(islower)(int c)
+int as_islower(int c)
 {
 	return c >= 'a' && c <= 'z';
 }
 
-int _(isprint)(int c)
+int as_isprint(int c)
 {
-	return !_(iscntrl)(c);
+	return !as_iscntrl(c);
 }
 
-int _(ispunct)(int c)
+int as_ispunct(int c)
 {
 	return (c >= '!' && c <= '/') || (c >= ':' && c <= '@') || (c >= '[' && c <= '`');
 }
 
-int _(isspace)(int c)
+int as_isspace(int c)
 {
-	return (c >= 0xA && c <= 0xD) || _(isblank)(c);
+	return (c >= 0xA && c <= 0xD) || as_isblank(c);
 }
 
-int _(isupper)(int c)
+int as_isupper(int c)
 {
 	return c >= 'A' && c <= 'Z';
 }
 
-int _(isxdigit)(int c)
+int as_isxdigit(int c)
 {
-	c = _(tolower)(c);
-	return _(isdigit)(c) || (c >= 'a' && c <= 'f');
+	c = as_tolower(c);
+	return as_isdigit(c) || (c >= 'a' && c <= 'f');
 }
 
-int _(isblank)(int c)
+int as_isblank(int c)
 {
 	return c == '\t' || c == ' ';
 }
 
-int _(tolower)(int c)
+int as_tolower(int c)
 {
-	if(_(isupper)(c))
+	if(as_isupper(c))
 		return c - 'A' + 'a';
 
 	return c;
 }
 
-int _(toupper)(int c)
+int as_toupper(int c)
 {
-	if(_(islower)(c))
+	if(as_islower(c))
 		return c - 'a' + 'A';
 
 	return c;

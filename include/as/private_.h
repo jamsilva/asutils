@@ -1,5 +1,5 @@
-#ifndef AS_PRIVATE__H_INCLUDED_
-#define AS_PRIVATE__H_INCLUDED_
+#ifndef AS_PRIVATE_H_INCLUDED_
+#define AS_PRIVATE_H_INCLUDED_
 #include <as/char.h>
 #include <as/fdio.h>
 #include <as/math.h>
@@ -15,7 +15,6 @@
 	#define NULL 0L
 #endif
 
-#define _(fname)        ASUTILS_FUNC(fname)
 #define ALIGN(v, align) ((ulong) (((v) + ((align) - 1)) & ~((align) - 1)))
 #define SMAX(type)      (((type) 1) << (sizeof(type) * 8 - 1))
 #define UMAX(type)      (~((type) 0))

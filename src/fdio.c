@@ -5,61 +5,30 @@
 
 /* Private */
 
-// These variables are thread-local for MT-Safety.
-static __thread ulong iobuflen = 0;
-static __thread char* iobuf = NULL;
-
-static ulong maxdentlen = sizeof(asdirent) + 256;
-
-static int _(alloc_fdio)()
-{
-	if(iobuflen == 0)
-	{
-		ulong pagesize = _(getpagesize)();
-		iobuflen = ALIGN(pagesize + maxdentlen, pagesize);
-		iobuf = (char*) _(anonmmap)(iobuflen);
-		iobuflen -= maxdentlen;
-
-		if(!iobuf)
-		{
-			errno = ENOMEM;
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-static long _(do_read)(int fd, char* buf, ulong len)
+static long as_do_read(int fd, char* buf, ulong len)
 {
 	long got;
 
-	while((got = _(read)(fd, buf, len)) == -1 && errno == EINTR);
+	while((got = as_read(fd, buf, len)) == -1 && errno == EINTR);
 
 	return got;
 }
 
-static long _(do_write)(int fd, const char* buf, ulong len)
+static long as_do_write(int fd, const char* buf, ulong len)
 {
 	long written;
 
-	while((written = _(write)(fd, buf, len)) == -1 && errno == EINTR);
+	while((written = as_write(fd, buf, len)) == -1 && errno == EINTR);
 
 	return written;
 }
 
 /* Public API */
 
-void _(cleanup_fdio)()
-{
-	if(iobuf)
-		_(anonmunmap)(iobuf, iobuflen + maxdentlen);
-}
-
-int _(fgetc)(int fd)
+int as_fgetc(int fd)
 {
 	char c;
-	ulong res = _(fread)(&c, (ulong) 1, (ulong) 1, fd);
+	ulong res = as_fread(&c, (ulong) 1, (ulong) 1, fd);
 
 	if(res == 0)
 		return AS_EOF;
@@ -67,7 +36,7 @@ int _(fgetc)(int fd)
 	return (int) c;
 }
 
-char* _(fgets)(char* str, ulong len, int fd)
+char* as_fgets(char* str, ulong len, int fd)
 {
 	if(!str || !len)
 		return NULL;
@@ -76,7 +45,7 @@ char* _(fgets)(char* str, ulong len, int fd)
 
 	while(--len)
 	{
-		int c = _(fgetc)(fd);
+		int c = as_fgetc(fd);
 
 		if(c == AS_EOF)
 		{
@@ -96,38 +65,38 @@ char* _(fgets)(char* str, ulong len, int fd)
 	return str;
 }
 
-int _(fopen)(const char* path, const char* mode)
+int as_fopen(const char* path, const char* mode)
 {
 	int flags = 0;
 
 	while(*mode)
-		flags |= _(modeflags)(*mode++);
+		flags |= as_modeflags(*mode++);
 
-	return _(open)(path, _(normalizeflags)(flags));
+	return as_open(path, as_normalizeflags(flags));
 }
 
-int _(fputc)(int c, int fd)
+int as_fputc(int c, int fd)
 {
 	char ch = (char) c;
-	return (int) _(do_write)(fd, &ch, (ulong) 1);
+	return (int) as_do_write(fd, &ch, (ulong) 1);
 }
 
-int _(fputs)(const char* str, int fd)
+int as_fputs(const char* str, int fd)
 {
-	return (int) _(do_write)(fd, str, _(strlen)(str));
+	return (int) as_do_write(fd, str, as_strlen(str));
 }
 
-int _(fprintf)(int fd, const char* fmt, ...)
+int as_fprintf(int fd, const char* fmt, ...)
 {
 	TO_VA(ap, fmt,
-		int res = _(vfprintf)(fd, fmt, ap);
+		int res = as_vfprintf(fd, fmt, ap);
 	);
 	return res;
 }
 
-ulong _(fread)(void* ptr, ulong len, ulong n, int fd)
+ulong as_fread(void* ptr, ulong len, ulong n, int fd)
 {
-	long got = _(do_read)(fd, (char*) ptr, len * n);
+	long got = as_do_read(fd, (char*) ptr, len * n);
 
 	if(got < 1)
 		return 0;
@@ -135,19 +104,19 @@ ulong _(fread)(void* ptr, ulong len, ulong n, int fd)
 	return (ulong) got;
 }
 
-int _(fseek)(int fd, long offset, int origin)
+int as_fseek(int fd, long offset, int origin)
 {
-	return (int) _(lseek)(fd, offset, origin);
+	return (int) as_lseek(fd, offset, origin);
 }
 
-long _(ftell)(int fd)
+long as_ftell(int fd)
 {
-	return _(fseek)(fd, 0, AS_SEEK_CUR);
+	return as_fseek(fd, 0, AS_SEEK_CUR);
 }
 
-ulong _(fwrite)(const void* ptr, ulong len, ulong n, int fd)
+ulong as_fwrite(const void* ptr, ulong len, ulong n, int fd)
 {
-	long written = _(do_write)(fd, (const char*) ptr, len * n);
+	long written = as_do_write(fd, (const char*) ptr, len * n);
 
 	if(written < 0)
 		return 0;
@@ -155,86 +124,88 @@ ulong _(fwrite)(const void* ptr, ulong len, ulong n, int fd)
 	return (ulong) written;
 }
 
-int _(getc)(int fd)
+int as_getc(int fd)
 {
-	return _(fgetc)(fd);
+	return as_fgetc(fd);
 }
 
-int _(getchar)()
+int as_getchar()
 {
-	return _(fgetc)(AS_STDIN);
+	return as_fgetc(AS_STDIN);
 }
 
-int _(printf)(const char* fmt, ...)
+int as_printf(const char* fmt, ...)
 {
 	TO_VA(ap, fmt,
-		int res = _(vfprintf)(AS_STDOUT, fmt, ap);
+		int res = as_vfprintf(AS_STDOUT, fmt, ap);
 	);
 	return res;
 }
 
-int _(putc)(int c, int fd)
+int as_putc(int c, int fd)
 {
-	return _(fputc)(c, fd);
+	return as_fputc(c, fd);
 }
 
-int _(putchar)(int c)
+int as_putchar(int c)
 {
-	return _(fputc)(c, AS_STDOUT);
+	return as_fputc(c, AS_STDOUT);
 }
 
-int _(puts)(const char* str)
+int as_puts(const char* str)
 {
-	int res = _(fputs)(str, AS_STDOUT);
+	int res = as_fputs(str, AS_STDOUT);
 
 	if(res < 0)
 		return res;
 
-	_(putchar)('\n');
+	as_putchar('\n');
 	return 0;
 }
 
-asdirent* _(readdir)(int dir)
+int as_readdir(int dir, as_dirent_t* dirent)
 {
-	if(_(alloc_fdio)() == -1)
-		return NULL;
-
-	asdirent* dent = (asdirent*) &iobuf[iobuflen];
-	long res = -1;
-	ulong i;
 	errno = EINVAL;
 
-	for(i = sizeof(asdirent) ; res == -1 && errno == EINVAL && i <= maxdentlen ; i += sizeof(asdirent))
-		res = _(getdents)(dir, dent, i);
+	if(!dirent)
+		return -1;
 
-	if(res == -1 && errno == EINVAL && i != maxdentlen)
-		res = _(getdents)(dir, dent, maxdentlen);
+	long res = -1;
+	ulong maxdirent = sizeof(as_dirent_t);
+	ulong mindirent = maxdirent - AS_MAXDIRLEN + 1;
+	ulong i = mindirent;
+
+	for( ; res == -1 && errno == EINVAL && i <= maxdirent ; i += mindirent)
+		res = as_getdents(dir, dirent, i);
+
+	if(res == -1 && errno == EINVAL && i != maxdirent)
+		res = as_getdents(dir, dirent, maxdirent);
 
 	if(res < 1)
-		return NULL;
+		return -1;
 
-	return dent;
+	return 0;
 }
 
-int _(remove)(const char* path)
+int as_remove(const char* path)
 {
-	int res = _(unlink)(path);
+	int res = as_unlink(path);
 
 	if(res == -1 && errno == EISDIR)
-		return _(rmdir)(path);
+		return as_rmdir(path);
 
 	return res;
 }
 
-int _(rename)(const char* path1, const char* path2)
+int as_rename(const char* path1, const char* path2)
 {
-	if(_(link)(path1, path2) == -1)
+	if(as_link(path1, path2) == -1)
 		return -1;
 
-	if(_(remove)(path1) == -1)
+	if(as_remove(path1) == -1)
 	{
 		int err = errno;
-		_(remove)(path2);
+		as_remove(path2);
 		errno = err;
 		return -1;
 	}
@@ -242,17 +213,16 @@ int _(rename)(const char* path1, const char* path2)
 	return 0;
 }
 
-void _(rewind)(int fd)
+void as_rewind(int fd)
 {
-	_(fseek)(fd, 0, AS_SEEK_SET);
+	as_fseek(fd, 0, AS_SEEK_SET);
 }
 
-int _(vfprintf)(int fd, const char* fmt, va_list ap)
+int as_vfprintf(int fd, const char* fmt, va_list ap)
 {
-	if(_(alloc_fdio)() == -1)
-		return -1;
-
-	int res = _(vsnprintf)(iobuf, iobuflen, fmt, ap);
+	ulong iobuflen = as_getpagesize();
+	char* iobuf = (char*) as_anonmmap(iobuflen);
+	int res = as_vsnprintf(iobuf, iobuflen, fmt, ap);
 
 	if(res < 0)
 		return res;
@@ -262,13 +232,16 @@ int _(vfprintf)(int fd, const char* fmt, va_list ap)
 	if(ures > iobuflen - 1)
 	{
 		errno = ENOMEM;
+		as_anonmunmap(iobuf, iobuflen);
 		return -1;
 	}
 
-	return (int) _(do_write)(fd, iobuf, ures);
+	res = (int) as_do_write(fd, iobuf, ures);
+	as_anonmunmap(iobuf, iobuflen);
+	return res;
 }
 
-int _(vprintf)(const char* fmt, va_list ap)
+int as_vprintf(const char* fmt, va_list ap)
 {
-	return _(vfprintf)(AS_STDOUT, fmt, ap);
+	return as_vfprintf(AS_STDOUT, fmt, ap);
 }

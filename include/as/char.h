@@ -4,21 +4,21 @@
 
 ASUTILS_BEGIN_CXXCOMPAT
 
-int ASUTILS_FUNC(ctoi)    (int c);
-int ASUTILS_FUNC(isalnum) (int c);
-int ASUTILS_FUNC(isalpha) (int c);
-int ASUTILS_FUNC(iscntrl) (int c);
-int ASUTILS_FUNC(isdigit) (int c);
-int ASUTILS_FUNC(isgraph) (int c);
-int ASUTILS_FUNC(islower) (int c);
-int ASUTILS_FUNC(isprint) (int c);
-int ASUTILS_FUNC(ispunct) (int c);
-int ASUTILS_FUNC(isspace) (int c);
-int ASUTILS_FUNC(isupper) (int c);
-int ASUTILS_FUNC(isxdigit)(int c);
-int ASUTILS_FUNC(isblank) (int c);
-int ASUTILS_FUNC(tolower) (int c);
-int ASUTILS_FUNC(toupper) (int c);
+int as_ctoi    (int c);
+int as_isalnum (int c);
+int as_isalpha (int c);
+int as_iscntrl (int c);
+int as_isdigit (int c);
+int as_isgraph (int c);
+int as_islower (int c);
+int as_isprint (int c);
+int as_ispunct (int c);
+int as_isspace (int c);
+int as_isupper (int c);
+int as_isxdigit(int c);
+int as_isblank (int c);
+int as_tolower (int c);
+int as_toupper (int c);
 
 ASUTILS_END_CXXCOMPAT
 

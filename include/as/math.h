@@ -4,11 +4,11 @@
 
 ASUTILS_BEGIN_CXXCOMPAT
 
-llong ASUTILS_FUNC(ceil) (double d);
-llong ASUTILS_FUNC(floor)(double d);
-llong ASUTILS_FUNC(max)  (llong l, llong r);
-llong ASUTILS_FUNC(min)  (llong l, llong r);
-llong ASUTILS_FUNC(round)(double d);
+llong as_ceil (double d);
+llong as_floor(double d);
+llong as_max  (llong l, llong r);
+llong as_min  (llong l, llong r);
+llong as_round(double d);
 
 ASUTILS_END_CXXCOMPAT
 

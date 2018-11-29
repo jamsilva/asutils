@@ -1,6 +1,7 @@
 #ifndef AS_FDIO_H_INCLUDED_
 #define AS_FDIO_H_INCLUDED_
 #include <as/utils.h>
+#include <as/types/dirent.h>
 
 #define AS_EOF -1
 
@@ -16,28 +17,28 @@ ASUTILS_BEGIN_CXXCOMPAT
 
 #include <stdarg.h>
 
-int       ASUTILS_FUNC(fgetc)   (int fd);
-char*     ASUTILS_FUNC(fgets)   (char* str, ulong len, int fd);
-int       ASUTILS_FUNC(fopen)   (const char* path, const char* mode);
-int       ASUTILS_FUNC(fputc)   (int c, int fd);
-int       ASUTILS_FUNC(fputs)   (const char* str, int fd);
-int       ASUTILS_FUNC(fprintf) (int fd, const char* fmt, ...);
-ulong     ASUTILS_FUNC(fread)   (void* ptr, ulong len, ulong n, int fd);
-int       ASUTILS_FUNC(fseek)   (int fd, long offset, int origin);
-long      ASUTILS_FUNC(ftell)   (int fd);
-ulong     ASUTILS_FUNC(fwrite)  (const void* ptr, ulong len, ulong n, int fd);
-int       ASUTILS_FUNC(getc)    (int fd);
-int       ASUTILS_FUNC(getchar) (void);
-int       ASUTILS_FUNC(printf)  (const char* fmt, ...);
-int       ASUTILS_FUNC(putc)    (int c, int fd);
-int       ASUTILS_FUNC(putchar) (int c);
-int       ASUTILS_FUNC(puts)    (const char* str);
-asdirent* ASUTILS_FUNC(readdir) (int dir);
-int       ASUTILS_FUNC(remove)  (const char* path);
-int       ASUTILS_FUNC(rename)  (const char* path1, const char* path2);
-void      ASUTILS_FUNC(rewind)  (int fd);
-int       ASUTILS_FUNC(vfprintf)(int fd, const char* fmt, va_list ap);
-int       ASUTILS_FUNC(vprintf) (const char* fmt, va_list ap);
+int   as_fgetc   (int fd);
+char* as_fgets   (char* str, ulong len, int fd);
+int   as_fopen   (const char* path, const char* mode);
+int   as_fputc   (int c, int fd);
+int   as_fputs   (const char* str, int fd);
+int   as_fprintf (int fd, const char* fmt, ...);
+ulong as_fread   (void* ptr, ulong len, ulong n, int fd);
+int   as_fseek   (int fd, long offset, int origin);
+long  as_ftell   (int fd);
+ulong as_fwrite  (const void* ptr, ulong len, ulong n, int fd);
+int   as_getc    (int fd);
+int   as_getchar (void);
+int   as_printf  (const char* fmt, ...);
+int   as_putc    (int c, int fd);
+int   as_putchar (int c);
+int   as_puts    (const char* str);
+int   as_readdir (int dir, as_dirent_t* dirent);
+int   as_remove  (const char* path);
+int   as_rename  (const char* path1, const char* path2);
+void  as_rewind  (int fd);
+int   as_vfprintf(int fd, const char* fmt, va_list ap);
+int   as_vprintf (const char* fmt, va_list ap);
 
 ASUTILS_END_CXXCOMPAT
 
